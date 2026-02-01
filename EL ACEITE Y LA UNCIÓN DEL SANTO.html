@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EL ACEITE Y LA UNCIÓN DEL SANTO</title>
+<style>
+:root{
+--paper-bg:#ffffff;
+--ink:#2c3e50;
+--muted:#6b7280;
+--bar:#101827;
+--accent:#d35400;
+--accent2:#8e44ad;
+--ok:#27ae60;
+--info:#3498db;
+--warn:#f39c12;
+--bible:#c0392b;
+--idea:#1e8449;
+--repeat:#0f766e;
+--question:#7c3aed;
+--shadow:0 10px 30px rgba(0,0,0,0.10);
+--radius:14px;
+}
+*{box-sizing:border-box}
+body{
+background:var(--app-bg);
+font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+margin:0;
+display:flex;
+flex-direction:column;
+align-items:center;
+color:var(--ink);
+padding-top:86px;
+}
+#top-bar{
+position:fixed;
+top:0;
+left:0;
+right:0;
+width:100%;
+background:var(--topbar-bg);
+color:var(--topbar-ink);
+padding:10px 12px;
+display:flex;
+justify-content:center;
+align-items:center;
+gap:10px;
+z-index:1000;
+box-shadow:0 4px 14px rgba(0,0,0,0.35);
+flex-wrap:wrap;
+}
+#display{
+font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;
+font-size:2.4rem;
+font-weight:800;
+color:var(--warn);
+min-width:140px;
+text-align:center;
+}
+.btn{
+padding:10px 14px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+font-weight:800;
+letter-spacing:.3px;
+font-size:13px;
+transition:transform .08s ease,filter .2s ease;
+user-select:none;
+}
+.btn:active{transform:scale(.98)}
+#startStop{background:var(--ok);color:#fff}
+#saveBtn{background:var(--info);color:#fff}
+#downloadBtn{background:var(--accent2);color:#fff}
+.darkBtn{background:#111827;color:#fff;border:1px solid rgba(255,255,255,0.2)}
+#colorPicker{width:44px;height:38px;border:none;background:transparent;padding:0}
+.shell{
+width:95%;
+max-width:980px;
+margin:16px 0 40px 0;
+}
+.notebook-page{
+background:var(--paper-bg);
+width:100%;
+padding:34px 22px;
+box-shadow:var(--shadow);
+border-left:14px solid var(--accent);
+min-height:70vh;
+font-size:26px;
+line-height:1.6;
+outline:none;
+border-radius:var(--radius);
+}
+@media (min-width:768px){
+.notebook-page{padding:64px 70px;border-left:18px solid var(--accent);font-size:32px}
+}
+h1{color:var(--accent);font-size:1.8em;text-align:center;border-bottom:3px solid var(--line);padding-bottom:15px;margin:0 0 40px 0}
+h2{color:var(--accent);font-size:1.35em;text-transform:uppercase;margin-top:50px;border-left:8px solid var(--accent);padding-left:18px}
+h3{color:var(--accent);font-size:1.15em;font-style:italic;margin-top:28px}
+.bible-text{color:var(--bible);font-weight:600;display:block;margin:12px 0;font-style:italic}
+.citation{color:#111827;font-weight:900;display:block;text-decoration:underline;font-size:.9em}
+.sub-point{color:var(--idea);font-weight:900;display:block;margin-top:26px;border-bottom:1px solid var(--line);padding-bottom:10px}
+hr{border:0;height:2px;background:var(--line);margin:44px 0}
+.mark-idea{background:rgba(30,132,73,0.12);border-left:10px solid var(--idea);padding:12px 14px;border-radius:12px;display:block;margin:16px 0}
+.mark-repeat{background:rgba(15,118,110,0.12);border-left:10px solid var(--repeat);padding:12px 14px;border-radius:12px;display:block;margin:16px 0}
+.mark-question{background:rgba(124,58,237,0.12);border-left:10px solid var(--question);padding:12px 14px;border-radius:12px;display:block;margin:16px 0;font-weight:900}
+#toast{
+position:fixed;
+bottom:18px;
+background:#22c55e;
+color:#052e16;
+padding:10px 18px;
+border-radius:999px;
+display:none;
+z-index:3000;
+font-weight:900;
+box-shadow:0 12px 25px rgba(0,0,0,0.18);
+}
+@media print{
+#top-bar,#toast{display:none !important}
+body{background:#fff}
+.shell{width:100%;max-width:none;margin:0}
+.notebook-page{box-shadow:none;border-left:10px solid var(--accent);border-radius:0;min-height:auto}
+}
+
+:root.light{
+--app-bg:#f4f7f6;
+--paper-bg:#ffffff;
+--ink:#2c3e50;
+--topbar-bg:#ffffff;
+--topbar-ink:#0b1220;
+--line:#e5e7eb;
+}
+:root.dark{
+--app-bg:#050814;
+--paper-bg:#0b1220;
+--ink:#e5e7eb;
+--topbar-bg:#0b1220;
+--topbar-ink:#ffffff;
+--line:rgba(255,255,255,0.12);
+}
+</style>
+</head>
+<body>
+
+<div id="top-bar">
+<div id="display">00:00:00</div>
+<button id="startStop" class="btn" type="button">Iniciar</button>
+<button id="saveBtn" class="btn" type="button">💾 Guardar</button>
+<button id="downloadBtn" class="btn" type="button">📥 Exportar</button>
+<button id="themeBtn" class="btn darkBtn" type="button">🌙 / ☀️</button>
+<button id="undoBtn" class="btn darkBtn" type="button" title="Deshacer">↩︎</button>
+<button id="redoBtn" class="btn darkBtn" type="button" title="Rehacer">↪︎</button>
+<button id="zoomOut" class="btn darkBtn" type="button">A-</button>
+<button id="zoomIn" class="btn darkBtn" type="button">A+</button>
+<button id="colorBtn" class="btn darkBtn" type="button">Color</button>
+<input id="colorPicker" type="color" value="#2c3e50" aria-label="Color de fuente">
+</div>
+
+<div class="shell">
+<div class="notebook-page" id="editor" contenteditable="true" spellcheck="false">
+
+<div class="good-news">
+  <h2>Buena Noticia</h2>
+  <p class="bible-ref">1 Pedro 1:3 (NVI)</p>
+  <p class="bible-text">“¡Alabado sea Dios, Padre de nuestro Señor Jesucristo! Por su gran misericordia, nos ha hecho nacer de nuevo mediante la resurrección de Jesucristo, para darnos una esperanza viva.”</p>
+</div>
+<hr>
+
+<h1>EL ACEITE Y LA UNCIÓN DEL SANTO</h1>
+
+<span class="citation">Versículo clave</span>
+<span class="bible-text">“Pero vosotros tenéis la unción del Santo, y conocéis todas las cosas.”<br>— 1 Juan 2:20</span>
+
+<hr>
+
+<h2>Introducción</h2>
+<h3>Minimalista</h3>
+<p>A lo largo de la Escritura, Dios utilizó elementos visibles para revelar realidades espirituales profundas.<br>
+Uno de los símbolos más constantes es el aceite.<br>
+Nunca fue el fin, sino la señal.<br>
+En Cristo, el símbolo da paso a la sustancia.</p>
+
+<hr>
+
+<h2>1. El aceite como sustento de la luz</h2>
+<p>La lámpara debía arder continuamente.</p>
+<span class="bible-text">“Aceite puro de olivas para hacer arder continuamente las lámparas.” — Levítico 24:2</span>
+<p>Jesús retoma esta imagen en la parábola de las diez vírgenes.</p>
+<span class="mark-idea">Principio:<br>
+La lámpara puede existir,<br>
+pero la luz depende del aceite invisible.<br>
+👉 El aceite habla de vigilancia interior y vida sostenida desde dentro.</span>
+
+<hr>
+
+<h2>2. El aceite y la sanidad</h2>
+<p>El aceite está ligado al cuidado, la misericordia y la fe.</p>
+<span class="bible-text">“Echándoles aceite y vino.” — Lucas 10:34<br>
+“Oren por él, ungiéndole con aceite.” — Santiago 5:14</span>
+<span class="mark-idea">Principio:<br>
+El aceite no sanaba.<br>
+Dios sanaba.<br>
+El acto visible expresaba confianza en el Dios que interviene.</span>
+
+<hr>
+
+<h2>3. El aceite como provisión sobrenatural</h2>
+<p>El aceite fue evidencia de sustento continuo y multiplicación.</p>
+<span class="bible-text">“Ni la harina escaseó, ni el aceite menguó.” — 1 Reyes 17:16<br>
+“Vende el aceite y paga tus deudas.” — 2 Reyes 4:7</span>
+<span class="mark-idea">Principio:<br>
+Dios multiplica lo que se pone en Sus manos.<br>
+El aceite no solo cubre la necesidad,<br>
+restaura el futuro.</span>
+
+<hr>
+
+<h2>4. El aceite en las ofrendas</h2>
+<p>El aceite se mezclaba con la harina como expresión de gratitud.</p>
+<span class="bible-text">“Y echará sobre ella aceite.” — Levítico 2:1</span>
+<span class="mark-idea">Principio:<br>
+No es obligación.<br>
+Es una respuesta agradecida al favor de Dios.</span>
+
+<hr>
+
+<h2>5. El aceite como gozo restaurador</h2>
+<p>El aceite reemplaza el luto.</p>
+<span class="bible-text">“Óleo de gozo en lugar de luto.” — Isaías 61:3<br>
+“Te ungió con óleo de alegría.” — Salmo 45:7</span>
+<span class="mark-idea">Principio:<br>
+No es emoción superficial,<br>
+es restauración interior que produce gozo verdadero.</span>
+
+<hr>
+
+<h2>6. El aceite como honor y hospitalidad</h2>
+<p>Ungir era recibir, honrar y afirmar valor.</p>
+<span class="bible-text">“Unges mi cabeza con aceite.” — Salmo 23:5</span>
+<span class="mark-idea">Principio:<br>
+La unción habla de posición.<br>
+Hemos sido recibidos en la casa de Dios.</span>
+
+<hr>
+
+<h2>7. El aceite como confirmación del llamado</h2>
+<p>El aceite de la santa unción no otorgaba el llamado, sino que confirmaba públicamente lo que Dios ya había establecido.</p>
+<p><strong>Reyes:</strong> Saúl y David</p>
+<p><strong>Sacerdotes:</strong> Aarón y sus hijos</p>
+<p><strong>Profetas:</strong> Eliseo</p>
+<span class="bible-text">“Entonces Samuel tomó el cuerno del aceite, y lo ungió en medio de sus hermanos;<br>
+y desde aquel día en adelante el Espíritu de Jehová vino sobre David.”<br>
+— 1 Samuel 16:13</span>
+<span class="mark-repeat">Principio:<br>
+La unción no premia el desempeño.<br>
+La unción sella la elección.<br>
+👉 La elección siempre precede al desempeño.</span>
+
+<hr>
+
+<h2>8. Del símbolo al cumplimiento: el Ungido</h2>
+<p>Todo lo que el aceite representaba converge en Cristo.</p>
+<span class="bible-text">“Dios no da el Espíritu por medida.” — Juan 3:34</span>
+<p>Jesús no fue ungido con aceite externo,<br>
+sino con el Espíritu sin medida.</p>
+<span class="mark-idea">👉 El aceite anunciaba.<br>
+👉 Cristo cumple.</span>
+
+<hr>
+
+<h2>9. La unción hoy: realidad interna</h2>
+<span class="bible-text">“La unción que vosotros recibisteis de Él permanece en vosotros.” — 1 Juan 2:27</span>
+<span class="mark-idea">Principio final:<br>
+Ya no vivimos del símbolo externo,<br>
+sino de la sustancia interna.<br>
+Hay luz.<br>
+Hay sanidad integral.<br>
+Hay provisión.<br>
+Hay gozo.<br>
+Hay honra.<br>
+Porque el Espíritu Santo es el suministro vivo de todo lo que el aceite solo anunciaba.</span>
+
+</div>
+</div>
+
+<div id="toast">✅ Guardado</div>
+
+<script>
+const STORAGE_KEY = "libreta_donde_esta_tu_fe_interactiva_v2";
+const editor = document.getElementById("editor");
+const toast = document.getElementById("toast");
+
+window.addEventListener("load", ()=>{
+const saved = localStorage.getItem(STORAGE_KEY);
+if(saved) editor.innerHTML = saved;
+});
+
+function flash(msg){
+toast.textContent = msg;
+toast.style.display="block";
+setTimeout(()=>toast.style.display="none", 1600);
+}
+
+function saveDoc(){
+localStorage.setItem(STORAGE_KEY, editor.innerHTML);
+flash("✅ Guardado");
+}
+document.getElementById("saveBtn").addEventListener("click", saveDoc);
+
+document.addEventListener("keydown", (e)=>{
+const k = e.key.toLowerCase();
+if((e.ctrlKey || e.metaKey) && k==="s"){e.preventDefault();saveDoc();}
+if((e.ctrlKey || e.metaKey) && k==="z"){e.preventDefault();document.execCommand("undo");}
+if((e.ctrlKey || e.metaKey) && (k==="y" || (e.shiftKey && k==="z"))){e.preventDefault();document.execCommand("redo");}
+});
+
+/* Undo/Redo buttons */
+document.getElementById("undoBtn").addEventListener("click", ()=>document.execCommand("undo"));
+document.getElementById("redoBtn").addEventListener("click", ()=>document.execCommand("redo"));
+
+/* Export */
+function exportHtml(){
+const content = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Libreta</title></head><body>${editor.innerHTML}</body></html>`;
+const blob = new Blob([content],{type:"text/html"});
+const a = document.createElement("a");
+a.href = URL.createObjectURL(blob);
+a.download = "Libreta_Donde_Esta_Tu_Fe.html";
+a.click();
+}
+
+document.getElementById("downloadBtn").addEventListener("click", ()=>{
+const choice = prompt("Escribe 1 para HTML, 2 para PDF (Imprimir)","1");
+if(choice==="2"){window.print();return;}
+exportHtml();
+});
+
+/* Timer */
+let startTime = 0;
+let elapsed = 0;
+let timerId = null;
+const disp = document.getElementById("display");
+const ssBtn = document.getElementById("startStop");
+
+function fmt(ms){
+let h = Math.floor(ms/3600000);
+let m = Math.floor((ms%3600000)/60000);
+let s = Math.floor((ms%60000)/1000);
+return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+function tick(){elapsed = Date.now() - startTime; disp.textContent = fmt(elapsed);}
+function startTimer(){
+startTime = Date.now() - elapsed;
+timerId = setInterval(tick, 1000);
+ssBtn.textContent = "Pausar";
+ssBtn.style.background = "#ef4444";
+}
+function pauseTimer(){
+clearInterval(timerId);
+timerId = null;
+ssBtn.textContent = "Iniciar";
+ssBtn.style.background = "var(--ok)";
+}
+ssBtn.addEventListener("click", ()=>{ if(timerId) pauseTimer(); else startTimer(); });
+
+/* Font size (whole editor) */
+function currentFontSize(){
+const s = window.getComputedStyle(editor).fontSize;
+return parseFloat(s) || 32;
+}
+function setFontSize(px){
+const clamped = Math.max(18, Math.min(60, px));
+editor.style.fontSize = clamped + "px";
+flash("🔠 Tamaño: " + clamped + "px");
+}
+document.getElementById("zoomIn").addEventListener("click", ()=>setFontSize(currentFontSize()+2));
+document.getElementById("zoomOut").addEventListener("click", ()=>setFontSize(currentFontSize()-2));
+
+/* Font color (selection if any, else whole editor) */
+const picker = document.getElementById("colorPicker");
+document.getElementById("colorBtn").addEventListener("click", ()=>picker.click());
+
+function applyColor(hex){
+const sel = window.getSelection();
+if(sel && sel.toString().length>0){
+document.execCommand("styleWithCSS", false, true);
+document.execCommand("foreColor", false, hex);
+flash("🎨 Color aplicado a selección");
+return;
+}
+editor.style.color = hex;
+flash("🎨 Color aplicado a toda la libreta");
+}
+
+picker.addEventListener("input", (e)=>applyColor(e.target.value));
+
+/* Theme toggle */
+const themeBtn = document.getElementById("themeBtn");
+const root = document.documentElement;
+
+function setTheme(next){
+  root.classList.remove("light","dark");
+  root.classList.add(next);
+  localStorage.setItem("libreta_theme", next);
+}
+
+setTheme(localStorage.getItem("libreta_theme") || "light");
+
+themeBtn.addEventListener("click", ()=>{
+  const next = root.classList.contains("dark") ? "light" : "dark";
+  setTheme(next);
+});
+
+</script>
+
+</body>
+</html>
